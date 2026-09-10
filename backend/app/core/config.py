@@ -35,13 +35,14 @@ class Settings(BaseSettings):
 
     EXAM_CACHE_TTL_SECONDS: int = 300
 
-    EMAIL_BACKEND: str = "console"  # console | smtp
+    EMAIL_BACKEND: str = "console"  # console | smtp | resend
     EMAIL_FROM: str = "no-reply@admissionmate.app"
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_USE_TLS: bool = True
+    RESEND_API_KEY: str = ""
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
