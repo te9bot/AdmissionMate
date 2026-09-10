@@ -24,7 +24,7 @@ def upgrade() -> None:
         text(
             """
             INSERT INTO users (id, name, email, role, is_active, created_at)
-            VALUES (:id, 'Admin', :email, 'admin', true, now())
+            VALUES (:id::uuid, 'Admin', :email, 'admin', true, now())
             ON CONFLICT (email) DO UPDATE SET role = 'admin', is_active = true
             """
         ).bindparams(id=str(uuid.uuid4()), email=ADMIN_EMAIL)
