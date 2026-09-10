@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ExamCard } from "@/components/ExamCard";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
+import { useInfiniteReveal } from "@/lib/useInfiniteReveal";
 import { EXAM_CATEGORIES, type Exam, type ExamCategory } from "@/lib/types";
 
 type Filter = ExamCategory | "all";
@@ -33,6 +34,8 @@ export default function PublicCalendarPage() {
     const upcoming = exams.filter((e) => e.days_left >= 0).sort((a, b) => a.days_left - b.days_left);
     return upcoming[0];
   }, [exams]);
+
+  const { visibleCount, sentinelRef, hasMore } = useInfiniteReveal(exams.length, 6);
 
   return (
     <main className="min-h-screen bg-brand-50 p-4 sm:p-8">
@@ -94,10 +97,15 @@ export default function PublicCalendarPage() {
             </p>
           )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {exams.map((exam) => (
+            {exams.slice(0, visibleCount).map((exam) => (
               <ExamCard key={exam.id} exam={exam} />
             ))}
           </div>
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              <p className="text-xs text-brand-500">Loading more…</p>
+            </div>
+          )}
         </section>
       </div>
     </main>

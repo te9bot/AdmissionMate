@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { StatTile } from "@/components/StatTile";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useInfiniteReveal } from "@/lib/useInfiniteReveal";
 import { CATEGORY_STYLES, EXAM_CATEGORIES, type AuditLogEntry, type Exam, type ExamCategory, type User } from "@/lib/types";
 import { ActivityIcon, CalendarIcon, UsersIcon } from "@/components/icons";
 
@@ -34,6 +35,8 @@ export default function AdminDashboardPage() {
   }, [accessToken]);
 
   const activeUsers = useMemo(() => users.filter((u) => u.is_active).length, [users]);
+  const examsReveal = useInfiniteReveal(exams.length, 10);
+  const usersReveal = useInfiniteReveal(users.length, 10);
 
   async function handleCreateExam(e: React.FormEvent) {
     e.preventDefault();
@@ -146,7 +149,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {exams.map((exam) => (
+              {exams.slice(0, examsReveal.visibleCount).map((exam) => (
                 <tr key={exam.id} className="border-t border-brand-100 dark:border-white/10">
                   <td className="py-2.5 text-brand-900 dark:text-slate-100">{exam.title}</td>
                   <td className="py-2.5">
@@ -175,6 +178,11 @@ export default function AdminDashboardPage() {
               )}
             </tbody>
           </table>
+          {examsReveal.hasMore && (
+            <div ref={examsReveal.sentinelRef} className="py-3 text-center text-xs text-brand-500 dark:text-slate-500">
+              Loading more…
+            </div>
+          )}
         </div>
       </section>
 
@@ -191,7 +199,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {users.slice(0, usersReveal.visibleCount).map((u) => (
                 <tr key={u.id} className="border-t border-brand-100 dark:border-white/10">
                   <td className="py-2.5 text-brand-900 dark:text-slate-100">{u.email}</td>
                   <td className="py-2.5 text-brand-700 dark:text-slate-400">{u.role}</td>
@@ -215,6 +223,11 @@ export default function AdminDashboardPage() {
               ))}
             </tbody>
           </table>
+          {usersReveal.hasMore && (
+            <div ref={usersReveal.sentinelRef} className="py-3 text-center text-xs text-brand-500 dark:text-slate-500">
+              Loading more…
+            </div>
+          )}
         </div>
       </section>
 
