@@ -14,6 +14,7 @@ class UserRead(BaseModel):
     email: str
     role: UserRole
     is_active: bool
+    has_password: bool
     created_at: datetime
 
 

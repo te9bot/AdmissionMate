@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.rate_limit import enforce_email_rate_limit
 from app.db.session import get_db
+from app.models.user import User
 from app.schemas.auth import (
     AccessTokenResponse,
+    LoginRequest,
     OTPRequest,
     OTPRequestResponse,
     OTPVerify,
     RefreshRequest,
+    SetPasswordRequest,
     TokenPair,
 )
 from app.schemas.user import UserRead
@@ -18,6 +22,7 @@ from app.services import auth_service
 router = APIRouter()
 
 _OTP_LIMIT_COUNT, _OTP_LIMIT_WINDOW = 5, 600  # 5 requests / 10 minutes per email
+_LOGIN_LIMIT_COUNT, _LOGIN_LIMIT_WINDOW = 10, 600  # 10 attempts / 10 minutes per email
 
 
 @router.post("/request-otp", response_model=OTPRequestResponse)
@@ -31,12 +36,39 @@ async def request_otp(payload: OTPRequest):
 
 @router.post("/verify-otp", response_model=TokenPair)
 async def verify_otp(payload: OTPVerify, db: AsyncSession = Depends(get_db)):
-    user = await auth_service.verify_otp(db, payload.email, payload.code)
+    user = await auth_service.verify_otp(db, payload.email, payload.code, payload.name)
     if user is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired code")
 
     access, refresh = auth_service.issue_token_pair(user)
     return TokenPair(access_token=access, refresh_token=refresh, user=UserRead.model_validate(user))
+
+
+@router.post("/login", response_model=TokenPair)
+async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    await enforce_email_rate_limit(
+        payload.email, scope="login", max_requests=_LOGIN_LIMIT_COUNT, window_seconds=_LOGIN_LIMIT_WINDOW
+    )
+    user, error = await auth_service.login_with_password(db, payload.email, payload.password)
+    if error == auth_service.PASSWORD_NOT_SET:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "PASSWORD_NOT_SET")
+    if user is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid email or password")
+
+    access, refresh = auth_service.issue_token_pair(user)
+    return TokenPair(access_token=access, refresh_token=refresh, user=UserRead.model_validate(user))
+
+
+@router.post("/set-password", response_model=UserRead)
+async def set_password(
+    payload: SetPasswordRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if len(payload.password) < 8:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+    updated = await auth_service.set_password(db, user, payload.password)
+    return UserRead.model_validate(updated)
 
 
 @router.post("/refresh", response_model=AccessTokenResponse)

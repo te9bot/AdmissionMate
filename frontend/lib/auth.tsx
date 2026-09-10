@@ -12,7 +12,9 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   requestOtp: (email: string, name?: string) => Promise<{ dev_code: string | null }>;
-  verifyOtp: (email: string, code: string) => Promise<User>;
+  verifyOtp: (email: string, code: string, name?: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
+  setPassword: (password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -55,11 +57,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return api.post<{ message: string; dev_code: string | null }>("/auth/request-otp", { email, name });
   }, []);
 
-  const verifyOtp = useCallback(async (email: string, code: string) => {
-    const result = await api.post<TokenPair>("/auth/verify-otp", { email, code });
+  const verifyOtp = useCallback(async (email: string, code: string, name?: string) => {
+    const result = await api.post<TokenPair>("/auth/verify-otp", { email, code, name });
     saveStored({ user: result.user, accessToken: result.access_token, refreshToken: result.refresh_token });
     setState({ user: result.user, accessToken: result.access_token, loading: false });
     return result.user;
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const result = await api.post<TokenPair>("/auth/login", { email, password });
+    saveStored({ user: result.user, accessToken: result.access_token, refreshToken: result.refresh_token });
+    setState({ user: result.user, accessToken: result.access_token, loading: false });
+    return result.user;
+  }, []);
+
+  const setPassword = useCallback(async (password: string) => {
+    const stored = loadStored();
+    if (!stored) throw new Error("Not authenticated");
+    const updatedUser = await api.post<User>("/auth/set-password", { password }, stored.accessToken);
+    saveStored({ ...stored, user: updatedUser });
+    setState((prev) => ({ ...prev, user: updatedUser }));
+    return updatedUser;
   }, []);
 
   const logout = useCallback(() => {
@@ -68,7 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, requestOtp, verifyOtp, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ ...state, requestOtp, verifyOtp, login, setPassword, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

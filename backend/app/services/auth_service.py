@@ -6,9 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import redis_client
 from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token, decode_token, generate_otp_code
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    generate_otp_code,
+    hash_password,
+    verify_password,
+)
 from app.models.user import User
 from app.services.email import email_backend
+
+PASSWORD_NOT_SET = "password_not_set"
+INVALID_CREDENTIALS = "invalid_credentials"
 
 OTP_KEY_PREFIX = "otp"
 
@@ -45,6 +55,25 @@ async def verify_otp(db: AsyncSession, email: str, code: str, name: str | None =
         user = User(email=email.lower(), name=name)
         db.add(user)
         await db.flush()
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def login_with_password(db: AsyncSession, email: str, password: str) -> tuple[User | None, str | None]:
+    result = await db.execute(select(User).where(User.email == email.lower()))
+    user = result.scalar_one_or_none()
+    if user is None or not user.is_active:
+        return None, INVALID_CREDENTIALS
+    if user.password_hash is None:
+        return None, PASSWORD_NOT_SET
+    if not verify_password(password, user.password_hash):
+        return None, INVALID_CREDENTIALS
+    return user, None
+
+
+async def set_password(db: AsyncSession, user: User, password: str) -> User:
+    user.password_hash = hash_password(password)
     await db.commit()
     await db.refresh(user)
     return user

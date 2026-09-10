@@ -1,3 +1,7 @@
+import os
+
+os.environ["EMAIL_BACKEND"] = "console"  # tests must never depend on real email delivery
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text

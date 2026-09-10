@@ -16,6 +16,16 @@ class OTPRequestResponse(BaseModel):
 class OTPVerify(BaseModel):
     email: EmailStr
     code: str
+    name: str | None = None
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SetPasswordRequest(BaseModel):
+    password: str
 
 
 class TokenPair(BaseModel):
