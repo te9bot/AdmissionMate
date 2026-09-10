@@ -1,0 +1,61 @@
+databases:
+  - name: admissionmate-db
+    plan: free
+    databaseName: admissionmate
+    user: admissionmate
+
+services:
+  - type: web
+    name: admissionmate-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: APP_NAME
+        value: AdmissionMate
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: admissionmate-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+      - key: OTP_LENGTH
+        value: "6"
+      - key: OTP_TTL_SECONDS
+        value: "600"
+      - key: EXAM_CACHE_TTL_SECONDS
+        value: "300"
+      - key: EMAIL_BACKEND
+        value: smtp
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USE_TLS
+        value: "true"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: CORS_ORIGINS
+        value: '["https://admission-mate-sandy.vercel.app"]'
+      - key: NOTIFICATION_JOB_HOUR
+        value: "8"
+      - key: NOTIFICATION_JOB_MINUTE
+        value: "0"
