@@ -7,5 +7,5 @@
 }
 
 body {
-  @apply bg-brand-50 text-brand-950 antialiased;
+  @apply bg-brand-50 text-brand-950 antialiased transition-colors duration-200 dark:bg-slate-950 dark:text-slate-100;
 }

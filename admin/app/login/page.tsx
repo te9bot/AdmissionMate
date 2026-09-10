@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Step = "email" | "code";
 
@@ -48,9 +49,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-brand-50 p-4">
-      <div className="w-full max-w-sm rounded-4xl bg-gradient-to-br from-brand-500 to-brand-800 p-8 text-white shadow-panel">
-        <p className="text-xs font-medium uppercase tracking-wide text-white/70">AdmissionMate</p>
+    <main className="flex min-h-screen items-center justify-center bg-brand-50 p-4 dark:bg-slate-950">
+      <div className="w-full max-w-sm rounded-4xl bg-gradient-to-br from-brand-500 to-brand-800 p-8 text-white shadow-panel dark:from-indigo-500 dark:via-violet-600 dark:to-slate-900">
+        <div className="flex items-start justify-between">
+          <p className="text-xs font-medium uppercase tracking-wide text-white/70">AdmissionMate</p>
+          <ThemeToggle variant="header" />
+        </div>
         <h1 className="mt-2 text-2xl font-bold">Admin sign in</h1>
         <p className="mt-1 text-sm text-white/70">
           {step === "email" ? "We'll email you a one-time code." : `Enter the code sent to ${email}.`}
