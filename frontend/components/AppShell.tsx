@@ -5,23 +5,16 @@ import { useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/lib/auth";
 
-export function AppShell({
-  children,
-  requireAdmin = false,
-}: {
-  children: React.ReactNode;
-  requireAdmin?: boolean;
-}) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace("/login");
-    else if (requireAdmin && user.role !== "admin") router.replace("/dashboard");
-  }, [loading, user, requireAdmin, router]);
+  }, [loading, user, router]);
 
-  if (loading || !user || (requireAdmin && user.role !== "admin")) {
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-50">
         <p className="text-sm text-brand-700">Loading…</p>

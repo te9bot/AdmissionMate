@@ -27,19 +27,6 @@ export function ListIcon({ className }: { className?: string }) {
   );
 }
 
-export function ShieldIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M12 3.5 5 6v5.4c0 4.5 3 7.6 7 9.1 4-1.5 7-4.6 7-9.1V6l-7-2.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function LogoutIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>

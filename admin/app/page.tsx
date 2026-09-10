@@ -4,18 +4,9 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { CATEGORY_STYLES, EXAM_CATEGORIES, type Exam, type ExamCategory, type User } from "@/lib/types";
+import { CATEGORY_STYLES, EXAM_CATEGORIES, type AuditLogEntry, type Exam, type ExamCategory, type User } from "@/lib/types";
 
-interface AuditLogEntry {
-  id: string;
-  admin_id: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  created_at: string;
-}
-
-export default function AdminPage() {
+export default function AdminDashboardPage() {
   const { accessToken } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -80,7 +71,7 @@ export default function AdminPage() {
   }
 
   return (
-    <AppShell requireAdmin>
+    <AppShell>
       <section className="rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8">
         <p className="text-sm font-medium uppercase tracking-wide text-white/70">Admin</p>
         <h1 className="mt-2 text-3xl font-bold">Manage exams &amp; users</h1>

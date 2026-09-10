@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_USE_TLS: bool = True
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     NOTIFICATION_JOB_HOUR: int = 8
     NOTIFICATION_JOB_MINUTE: int = 0

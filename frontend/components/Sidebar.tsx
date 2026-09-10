@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { CalendarIcon, FlameIcon, ListIcon, LogoutIcon, ShieldIcon } from "@/components/icons";
+import { CalendarIcon, FlameIcon, ListIcon, LogoutIcon } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", Icon: CalendarIcon },
@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <aside className="flex h-full w-20 flex-col items-center justify-between rounded-4xl bg-gradient-to-b from-brand-500 to-brand-700 py-6 shadow-panel">
@@ -37,20 +37,6 @@ export function Sidebar() {
               </Link>
             );
           })}
-
-          {user?.role === "admin" && (
-            <Link
-              href="/admin"
-              aria-label="Admin"
-              className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-                pathname?.startsWith("/admin")
-                  ? "bg-brand-950 text-white shadow-card"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <ShieldIcon className="h-5 w-5" />
-            </Link>
-          )}
         </nav>
       </div>
 
