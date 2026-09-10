@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,6 +10,8 @@ from app.core.cache import redis_client
 from app.core.config import settings
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.tasks.notifications import scheduler, start_notification_job
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
