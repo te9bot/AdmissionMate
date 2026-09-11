@@ -38,7 +38,7 @@ services:
       - key: EMAIL_FROM
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://admission-mate-sandy.vercel.app","https://admissionmate-admin.vercel.app"]'
+        value: '["https://admission-mate-sandy.vercel.app","https://admissionmate-admin.vercel.app","https://admissionmate.online","https://www.admissionmate.online"]'
       - key: NOTIFICATION_JOB_HOUR
         value: "8"
       - key: NOTIFICATION_JOB_MINUTE

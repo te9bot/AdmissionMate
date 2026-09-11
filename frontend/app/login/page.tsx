@@ -8,7 +8,10 @@ import { ApiError } from "@/lib/api";
 
 type Mode = "password" | "otp-email" | "signup" | "otp-code" | "set-password";
 
-const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? "https://admissionmate-admin.vercel.app";
+// Same-origin path: the admin app is proxied at /admin via vercel.json rewrites
+// (see admin/next.config.mjs basePath) so this works on any domain that serves
+// this frontend deployment, without needing a separate admin origin/env var.
+const ADMIN_LOGIN_PATH = "/admin/login";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,7 +55,7 @@ export default function LoginPage() {
       const user = await login(email, password);
       if (user.role === "admin") {
         logout();
-        window.location.href = `${ADMIN_URL}/login`;
+        window.location.href = ADMIN_LOGIN_PATH;
         return;
       }
       router.push("/dashboard");
