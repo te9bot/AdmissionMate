@@ -1,9 +1,3 @@
-databases:
-  - name: admissionmate-db
-    plan: free
-    databaseName: admissionmate
-    user: admissionmate
-
 services:
   - type: web
     name: admissionmate-api
@@ -20,9 +14,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: DATABASE_URL
-        fromDatabase:
-          name: admissionmate-db
-          property: connectionString
+        sync: false
       - key: REDIS_URL
         sync: false
       - key: JWT_SECRET
@@ -46,7 +38,7 @@ services:
       - key: EMAIL_FROM
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://admission-mate-sandy.vercel.app"]'
+        value: '["https://admission-mate-sandy.vercel.app","https://admissionmate-admin.vercel.app"]'
       - key: NOTIFICATION_JOB_HOUR
         value: "8"
       - key: NOTIFICATION_JOB_MINUTE
