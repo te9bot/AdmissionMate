@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CalendarMini } from "@/components/CalendarMini";
+import { CountdownClock } from "@/components/CountdownClock";
 import { ExamCard } from "@/components/ExamCard";
 import { Parallax } from "@/components/Parallax";
 import { StatTile } from "@/components/StatTile";
@@ -109,6 +110,16 @@ export default function DashboardPage() {
             />
           </div>
         </div>
+
+        {nearestExam && (
+          <div className="relative mt-6 flex flex-col items-start gap-4 rounded-3xl bg-black/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/60">Next up</p>
+              <p className="mt-1 text-base font-semibold">{nearestExam.title}</p>
+            </div>
+            <CountdownClock targetDate={nearestExam.exam_date} />
+          </div>
+        )}
       </section>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">

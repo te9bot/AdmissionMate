@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { CountdownClock } from "@/components/CountdownClock";
 import { ExamCard } from "@/components/ExamCard";
 import { Parallax } from "@/components/Parallax";
 import { useAuth } from "@/lib/auth";
@@ -58,12 +59,6 @@ export default function PublicCalendarPage() {
                 <p className="text-xs font-medium text-white/70">Exams tracked</p>
                 <p className="text-2xl font-semibold">{exams.length}</p>
               </div>
-              {nearest && (
-                <div className="text-right">
-                  <p className="text-xs font-medium text-white/70">Nearest exam</p>
-                  <p className="text-2xl font-semibold">{nearest.days_left}d</p>
-                </div>
-              )}
               {!loading &&
                 (user ? (
                   <Link
@@ -82,6 +77,16 @@ export default function PublicCalendarPage() {
                 ))}
             </div>
           </div>
+
+          {nearest && (
+            <div className="relative mt-8 flex flex-col items-start gap-4 rounded-3xl bg-black/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-white/60">Next up</p>
+                <p className="mt-1 text-base font-semibold">{nearest.title}</p>
+              </div>
+              <CountdownClock targetDate={nearest.exam_date} />
+            </div>
+          )}
 
           <div className="mt-8 flex flex-wrap gap-2">
             <FilterChip label="All" active={filter === "all"} onClick={() => setFilter("all")} />
