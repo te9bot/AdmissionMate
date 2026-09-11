@@ -158,22 +158,23 @@ export default function LoginPage() {
   if (mode === "set-password" || mode === "signup") {
     const isSignup = mode === "signup";
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-panel">
-          <div className="flex gap-1.5">
+      <main className="flex min-h-screen items-center justify-center bg-brand-50 p-4">
+        <div className="w-full max-w-sm rounded-4xl bg-white p-8 shadow-panel">
+          <p className="text-xs font-medium uppercase tracking-wide text-brand-400">AdmissionMate</p>
+          <div className="mt-4 flex gap-1.5">
             {[0, 1, isSignup ? 2 : null].filter((v) => v !== null).map((_, i) => (
               <span
                 key={i}
                 className={`h-1 flex-1 rounded-full ${
-                  i < (isSignup ? 1 : 2) ? "bg-slate-900" : "bg-slate-200"
+                  i < (isSignup ? 1 : 2) ? "bg-brand-700" : "bg-brand-100"
                 }`}
               />
             ))}
           </div>
-          <h1 className="mt-6 text-2xl font-bold text-slate-900">
+          <h1 className="mt-6 text-2xl font-bold text-brand-950">
             {isSignup ? "Create your account" : "Create a password"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-brand-500">
             {isSignup
               ? "We'll email you a code to verify it's really you before your account is created."
               : "Create a strong password to finish set up."}
@@ -184,29 +185,29 @@ export default function LoginPage() {
           <form className="mt-6 flex flex-col gap-4" onSubmit={isSignup ? handleSignupDetails : handleSetPassword}>
             {isSignup && (
               <>
-                <label className="flex flex-col gap-1.5 text-sm text-slate-600">
+                <label className="flex flex-col gap-1.5 text-sm text-brand-600">
                   Name
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                    className="w-full rounded-2xl border border-brand-200 px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-500"
                   />
                 </label>
-                <label className="flex flex-col gap-1.5 text-sm text-slate-600">
+                <label className="flex flex-col gap-1.5 text-sm text-brand-600">
                   Email
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                    className="w-full rounded-2xl border border-brand-200 px-4 py-3 text-sm text-brand-950 outline-none focus:border-brand-500"
                   />
                 </label>
               </>
             )}
-            <label className="flex flex-col gap-1.5 text-sm text-slate-600">
+            <label className="flex flex-col gap-1.5 text-sm text-brand-600">
               Password
               <PasswordField
                 value={newPassword}
@@ -215,7 +216,7 @@ export default function LoginPage() {
                 onToggleShow={() => setShowNewPassword((v) => !v)}
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-sm text-slate-600">
+            <label className="flex flex-col gap-1.5 text-sm text-brand-600">
               Re-enter password
               <PasswordField
                 value={confirmPassword}
@@ -239,7 +240,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busy || !passwordIsValid}
-              className="mt-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-40"
+              className="mt-2 rounded-2xl bg-brand-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:opacity-40"
             >
               {busy ? (isSignup ? "Sending code…" : "Saving…") : "Continue"}
             </button>
@@ -250,7 +251,7 @@ export default function LoginPage() {
                   setError(null);
                   setMode("password");
                 }}
-                className="text-xs font-medium text-slate-400 hover:text-slate-600"
+                className="text-xs font-medium text-brand-400 hover:text-brand-600"
               >
                 ← Back to log in
               </button>
@@ -401,9 +402,9 @@ export default function LoginPage() {
 
 function RequirementRow({ met, label }: { met: boolean; label: string }) {
   return (
-    <li className={`flex items-start gap-2 ${met ? "text-emerald-600" : "text-slate-400"}`}>
+    <li className={`flex items-start gap-2 ${met ? "text-brand-800" : "text-brand-300"}`}>
       <svg viewBox="0 0 20 20" fill="none" className="mt-0.5 h-4 w-4 shrink-0">
-        <circle cx="10" cy="10" r="9" className={met ? "fill-emerald-100" : "fill-slate-100"} />
+        <circle cx="10" cy="10" r="9" className={met ? "fill-accent-400/40" : "fill-brand-50"} />
         <path
           d="M6 10.5l2.5 2.5L14 7.5"
           stroke="currentColor"
@@ -461,13 +462,13 @@ function PasswordField({
         required
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-11 text-sm text-slate-900 outline-none focus:border-slate-400"
+        className="w-full rounded-2xl border border-brand-200 px-4 py-3 pr-11 text-sm text-brand-950 outline-none focus:border-brand-500"
       />
       <button
         type="button"
         onClick={onToggleShow}
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600"
+        className="absolute inset-y-0 right-3 flex items-center text-brand-300 hover:text-brand-600"
       >
         <EyeIcon open={show} />
       </button>

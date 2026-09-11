@@ -114,23 +114,26 @@ export default function LoginPage() {
 
   if (mode === "set-password") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="w-full max-w-sm rounded-3xl bg-white p-8 shadow-panel dark:bg-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-brand-50 p-4 dark:bg-slate-950">
+        <div className="w-full max-w-sm rounded-4xl bg-white p-8 shadow-panel dark:bg-slate-900">
           <div className="flex items-center justify-between">
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className={`h-1 w-8 rounded-full ${
-                    i < 2 ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-700"
-                  }`}
-                />
-              ))}
-            </div>
+            <p className="text-xs font-medium uppercase tracking-wide text-brand-400 dark:text-indigo-300">
+              AdmissionMate
+            </p>
             <ThemeToggle variant="header" />
           </div>
-          <h1 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">Create a password</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create a strong password to finish set up.</p>
+          <div className="mt-4 flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className={`h-1 w-8 rounded-full ${
+                  i < 2 ? "bg-brand-700 dark:bg-white" : "bg-brand-100 dark:bg-slate-700"
+                }`}
+              />
+            ))}
+          </div>
+          <h1 className="mt-6 text-2xl font-bold text-brand-950 dark:text-white">Create a password</h1>
+          <p className="mt-1 text-sm text-brand-500 dark:text-slate-400">Create a strong password to finish set up.</p>
 
           {error && (
             <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">
@@ -139,7 +142,7 @@ export default function LoginPage() {
           )}
 
           <form className="mt-6 flex flex-col gap-4" onSubmit={handleSetPassword}>
-            <label className="flex flex-col gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+            <label className="flex flex-col gap-1.5 text-sm text-brand-600 dark:text-slate-300">
               Password
               <PasswordField
                 value={newPassword}
@@ -148,7 +151,7 @@ export default function LoginPage() {
                 onToggleShow={() => setShowNewPassword((v) => !v)}
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+            <label className="flex flex-col gap-1.5 text-sm text-brand-600 dark:text-slate-300">
               Re-enter password
               <PasswordField
                 value={confirmPassword}
@@ -172,7 +175,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busy || !passwordIsValid}
-              className="mt-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              className="mt-2 rounded-2xl bg-brand-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
             >
               {busy ? "Saving…" : "Continue"}
             </button>
@@ -322,11 +325,11 @@ function RequirementRow({ met, label }: { met: boolean; label: string }) {
   return (
     <li
       className={`flex items-start gap-2 ${
-        met ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"
+        met ? "text-brand-800 dark:text-accent-400" : "text-brand-300 dark:text-slate-500"
       }`}
     >
       <svg viewBox="0 0 20 20" fill="none" className="mt-0.5 h-4 w-4 shrink-0">
-        <circle cx="10" cy="10" r="9" className={met ? "fill-emerald-100 dark:fill-emerald-500/20" : "fill-slate-100 dark:fill-slate-800"} />
+        <circle cx="10" cy="10" r="9" className={met ? "fill-accent-400/40 dark:fill-accent-400/15" : "fill-brand-50 dark:fill-slate-800"} />
         <path
           d="M6 10.5l2.5 2.5L14 7.5"
           stroke="currentColor"
@@ -384,13 +387,13 @@ function PasswordField({
         required
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-900 outline-none focus:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
+        className="w-full rounded-2xl border border-brand-200 bg-white px-4 py-3 pr-11 text-sm text-brand-950 outline-none focus:border-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-slate-500"
       />
       <button
         type="button"
         onClick={onToggleShow}
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+        className="absolute inset-y-0 right-3 flex items-center text-brand-300 hover:text-brand-600 dark:text-slate-500 dark:hover:text-slate-300"
       >
         <EyeIcon open={show} />
       </button>
