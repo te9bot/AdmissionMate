@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Parallax } from "@/components/Parallax";
 import { StatTile } from "@/components/StatTile";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -79,9 +80,13 @@ export default function AdminDashboardPage() {
 
   return (
     <AppShell>
-      <section id="overview" className="scroll-mt-6 rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8 dark:from-indigo-500 dark:via-violet-600 dark:to-slate-900">
-        <p className="text-sm font-medium uppercase tracking-wide text-white/70">Admin</p>
-        <h1 className="mt-2 text-3xl font-bold">Manage exams &amp; users</h1>
+      <section id="overview" className="relative scroll-mt-6 overflow-hidden rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8 dark:from-indigo-500 dark:via-violet-600 dark:to-slate-900">
+        <Parallax speed={0.2} className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-400/20 blur-3xl" />
+        <Parallax speed={0.12} className="pointer-events-none absolute -bottom-16 left-1/4 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative">
+          <p className="text-sm font-medium uppercase tracking-wide text-white/70">Admin</p>
+          <h1 className="mt-2 text-3xl font-bold">Manage exams &amp; users</h1>
+        </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">

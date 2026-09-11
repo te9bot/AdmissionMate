@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CalendarMini } from "@/components/CalendarMini";
 import { ExamCard } from "@/components/ExamCard";
+import { Parallax } from "@/components/Parallax";
 import { StatTile } from "@/components/StatTile";
 import { TimelineBlock } from "@/components/TimelineBlock";
 import { ViewToggle } from "@/components/ViewToggle";
@@ -85,8 +86,10 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <section className="rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-6">
+      <section className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8">
+        <Parallax speed={0.2} className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-400/20 blur-3xl" />
+        <Parallax speed={0.12} className="pointer-events-none absolute -bottom-16 left-1/4 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-white/70">My Calendar</p>
             <h1 className="mt-2 text-3xl font-bold">Hi{user?.name ? `, ${user.name}` : ""}</h1>

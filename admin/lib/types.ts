@@ -46,9 +46,9 @@ export const EXAM_CATEGORIES: { value: ExamCategory; label: string }[] = [
   { value: "others", label: "Others" },
 ];
 
-export const CATEGORY_STYLES: Record<ExamCategory, { bg: string; text: string; chip: string }> = {
-  hsc: { bg: "bg-brand-300", text: "text-brand-950", chip: "bg-brand-300/60 text-brand-900" },
-  ssc: { bg: "bg-brand-600", text: "text-white", chip: "bg-brand-900 text-white" },
-  admission: { bg: "bg-accent-400", text: "text-brand-950", chip: "bg-accent-400/30 text-brand-900" },
-  others: { bg: "bg-brand-100", text: "text-brand-900", chip: "bg-brand-100 text-brand-700" },
+export const CATEGORY_STYLES: Record<ExamCategory, { chip: string }> = {
+  hsc: { chip: "bg-brand-100 text-brand-700 dark:bg-brand-400/15 dark:text-brand-300" },
+  ssc: { chip: "bg-brand-800/10 text-brand-800 dark:bg-brand-300/10 dark:text-brand-200" },
+  admission: { chip: "bg-accent-400/20 text-brand-800 dark:bg-accent-400/15 dark:text-accent-400" },
+  others: { chip: "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300" },
 };

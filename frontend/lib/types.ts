@@ -58,9 +58,9 @@ export const EXAM_CATEGORIES: { value: ExamCategory; label: string }[] = [
   { value: "others", label: "Others" },
 ];
 
-export const CATEGORY_STYLES: Record<ExamCategory, { bg: string; text: string; chip: string }> = {
-  hsc: { bg: "bg-brand-300", text: "text-brand-950", chip: "bg-brand-300/60 text-brand-900" },
-  ssc: { bg: "bg-brand-600", text: "text-white", chip: "bg-brand-900 text-white" },
-  admission: { bg: "bg-accent-400", text: "text-brand-950", chip: "bg-accent-400/30 text-brand-900" },
-  others: { bg: "bg-brand-100", text: "text-brand-900", chip: "bg-brand-100 text-brand-700" },
+export const CATEGORY_STYLES: Record<ExamCategory, { border: string; dot: string; chip: string }> = {
+  hsc: { border: "border-brand-400", dot: "bg-brand-400", chip: "bg-brand-100 text-brand-700" },
+  ssc: { border: "border-brand-700", dot: "bg-brand-700", chip: "bg-brand-800/10 text-brand-800" },
+  admission: { border: "border-accent-400", dot: "bg-accent-400", chip: "bg-accent-400/20 text-brand-800" },
+  others: { border: "border-slate-400", dot: "bg-slate-400", chip: "bg-slate-100 text-slate-600" },
 };

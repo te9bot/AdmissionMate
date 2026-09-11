@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ExamCard } from "@/components/ExamCard";
+import { Parallax } from "@/components/Parallax";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
 import { useInfiniteReveal } from "@/lib/useInfiniteReveal";
@@ -40,8 +41,10 @@ export default function PublicCalendarPage() {
   return (
     <main className="min-h-screen bg-brand-50 p-4 sm:p-8">
       <div className="mx-auto max-w-6xl">
-        <section className="rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-10">
-          <div className="flex flex-wrap items-start justify-between gap-6">
+        <section className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-10">
+          <Parallax speed={0.2} className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent-400/20 blur-3xl" />
+          <Parallax speed={0.12} className="pointer-events-none absolute -bottom-20 left-1/3 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative flex flex-wrap items-start justify-between gap-6">
             <div>
               <p className="text-sm font-medium uppercase tracking-wide text-white/70">AdmissionMate</p>
               <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Exam Calendar</h1>

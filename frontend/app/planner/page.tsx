@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Parallax } from "@/components/Parallax";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { Exam, StudyGoal } from "@/lib/types";
@@ -88,12 +89,16 @@ export default function PlannerPage() {
 
   return (
     <AppShell>
-      <section className="rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8">
-        <p className="text-sm font-medium uppercase tracking-wide text-white/70">Study Planner</p>
-        <h1 className="mt-2 text-3xl font-bold">Plan your topics, day by day</h1>
-        <p className="mt-1 text-sm text-white/70">
-          Set a goal, list your topics, and we&apos;ll spread them evenly across your window.
-        </p>
+      <section className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-6 text-white shadow-panel sm:p-8">
+        <Parallax speed={0.2} className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-400/20 blur-3xl" />
+        <Parallax speed={0.12} className="pointer-events-none absolute -bottom-16 left-1/4 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative">
+          <p className="text-sm font-medium uppercase tracking-wide text-white/70">Study Planner</p>
+          <h1 className="mt-2 text-3xl font-bold">Plan your topics, day by day</h1>
+          <p className="mt-1 text-sm text-white/70">
+            Set a goal, list your topics, and we&apos;ll spread them evenly across your window.
+          </p>
+        </div>
       </section>
 
       <section className="mt-6 rounded-3xl bg-white p-6 shadow-card">
