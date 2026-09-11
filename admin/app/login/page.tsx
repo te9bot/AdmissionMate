@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -208,14 +209,24 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="rounded-2xl bg-white/15 px-4 py-3 text-sm placeholder-white/50 outline-none ring-white/30 focus:ring-2"
             />
-            <input
-              type="password"
-              required
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              className="rounded-2xl bg-white/15 px-4 py-3 text-sm placeholder-white/50 outline-none ring-white/30 focus:ring-2"
-            />
+            <div className="relative">
+              <input
+                type={showLoginPassword ? "text" : "password"}
+                required
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full rounded-2xl bg-white/15 px-4 py-3 pr-11 text-sm placeholder-white/50 outline-none ring-white/30 focus:ring-2"
+              />
+              <button
+                type="button"
+                onClick={() => setShowLoginPassword((v) => !v)}
+                aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-3 flex items-center text-white/60 hover:text-white"
+              >
+                <EyeIcon open={showLoginPassword} />
+              </button>
+            </div>
             <button
               type="submit"
               disabled={busy}
