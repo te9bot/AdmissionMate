@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import parse_qs, urlencode
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,12 +16,23 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL")
     @classmethod
     def _use_asyncpg_driver(cls, v: str) -> str:
-        # Managed Postgres hosts (Render, Heroku, ...) hand out plain
+        # Managed Postgres hosts (Render, Neon, Heroku, ...) hand out plain
         # postgres:// / postgresql:// URLs; SQLAlchemy needs the asyncpg driver.
         if v.startswith("postgres://"):
-            return "postgresql+asyncpg://" + v[len("postgres://") :]
-        if v.startswith("postgresql://"):
-            return "postgresql+asyncpg://" + v[len("postgresql://") :]
+            v = "postgresql+asyncpg://" + v[len("postgres://") :]
+        elif v.startswith("postgresql://"):
+            v = "postgresql+asyncpg://" + v[len("postgresql://") :]
+
+        # Neon (and some other hosts) add libpq-only query params —
+        # channel_binding isn't a valid asyncpg.connect() kwarg, and
+        # sslmode needs to be renamed to ssl for asyncpg.
+        if "?" in v:
+            base, _, query = v.partition("?")
+            params = parse_qs(query, keep_blank_values=True)
+            params.pop("channel_binding", None)
+            if "sslmode" in params:
+                params["ssl"] = params.pop("sslmode")
+            v = base + ("?" + urlencode(params, doseq=True) if params else "")
         return v
     REDIS_URL: str = "redis://localhost:6379/0"
 
