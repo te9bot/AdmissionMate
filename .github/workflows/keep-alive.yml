@@ -13,8 +13,8 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://admissionmate-api.onrender.com/health)
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://admissionmate-api.onrender.com/health || echo "curl_failed")
           echo "Health check returned HTTP $status"
           if [ "$status" != "200" ]; then
-            echo "::warning::Health check did not return 200 (got $status)"
+            echo "::warning::Health check did not return 200 (got $status) - the service may have been cold-starting"
           fi
