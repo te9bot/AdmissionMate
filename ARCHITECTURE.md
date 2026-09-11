@@ -92,7 +92,7 @@ a future session doesn't "fix" the shared origin without knowing it was intentio
   - `A  admissionmate.online  →  76.76.21.21`
   - `A  www.admissionmate.online  →  76.76.21.21`
   Until this is done, the site is only reachable at `admission-mate-sandy.vercel.app` (which already fully works, including `/admin`).
-- Old Render Postgres (`admissionmate-db`) is no longer used post-Neon-migration but hasn't been deleted yet — safe to remove once confident nothing regressed
+- Old Render Postgres (`admissionmate-db`) is gone — confirmed 2026-09-11 via Render API (account has zero Postgres instances), nothing left to clean up there
 - Admin Vercel project isn't connected to GitHub for auto-deploy yet (manual `vercel --prod` needed after changes to `admin/`)
 - Render's free web service spins down after inactivity — first request after idle has a cold-start delay
 - Once the custom domain is confirmed working, drop the old `*.vercel.app` origins from `CORS_ORIGINS` (Render env var + `render.yaml`)
