@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.rate_limit import enforce_email_rate_limit
+from app.core.security import password_strength_error
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
@@ -65,8 +66,9 @@ async def set_password(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if len(payload.password) < 8:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+    error = password_strength_error(payload.password)
+    if error:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, error)
     updated = await auth_service.set_password(db, user, payload.password)
     return UserRead.model_validate(updated)
 

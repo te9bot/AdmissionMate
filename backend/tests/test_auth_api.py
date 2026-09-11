@@ -61,13 +61,13 @@ async def test_set_password_then_login_with_it(client):
 
     resp = await client.post(
         "/auth/set-password",
-        json={"password": "correct-horse-battery"},
+        json={"password": "Correct-Horse1-Battery!"},
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert resp.status_code == 200
     assert resp.json()["has_password"] is True
 
-    resp = await client.post("/auth/login", json={"email": email, "password": "correct-horse-battery"})
+    resp = await client.post("/auth/login", json={"email": email, "password": "Correct-Horse1-Battery!"})
     assert resp.status_code == 200
     assert resp.json()["user"]["email"] == email
 
