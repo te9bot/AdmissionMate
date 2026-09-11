@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
@@ -6,6 +6,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "AdmissionMate Admin",
   description: "Admin dashboard for managing AdmissionMate exams, users, and activity.",
+  manifest: "/admin/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AM Admin",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6366f1",
 };
 
 const THEME_INIT_SCRIPT = `
