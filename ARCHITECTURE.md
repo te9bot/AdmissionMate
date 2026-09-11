@@ -18,28 +18,30 @@ Three deployable pieces, one shared backend:
                                  │
                 REST API (JSON, JWT bearer auth)
                                  │
-              ┌──────────────────┴──────────────────┐
-              │                                      │
-   ┌──────────▼──────────┐              ┌────────────▼───────────┐
-   │  frontend/ (Next.js) │              │  admin/ (Next.js)      │
-   │  Vercel: admission-  │              │  Vercel: admissionmate │
-   │  mate                │              │  -admin                │
-   │                      │              │                        │
-   │  admission-mate-     │              │  admissionmate-admin   │
-   │  sandy.vercel.app    │              │  .vercel.app            │
-   │                      │              │                        │
-   │  Public exam         │              │  Admin-only: manage    │
-   │  calendar + student  │              │  exams, users, audit   │
-   │  dashboard/planner    │              │  log                   │
-   └──────────────────────┘              └────────────────────────┘
+                    ┌────────────▼────────────┐
+                    │  admissionmate.online    │
+                    │  (Vercel project         │
+                    │  `admission-mate`)       │
+                    │                          │
+                    │  /            → frontend/ │
+                    │  /admin/*  → proxied to  │
+                    │  admin/'s own deployment │
+                    │  via vercel.json rewrite  │
+                    └──────────────────────────┘
 ```
 
-`admin/` is deployed as a **separate Vercel project on a separate origin**,
-not a route inside `frontend/`. Reason: the JWT an admin holds sits in
-`localStorage`, which is isolated per-origin by the browser. If admin tooling
-lived on the same origin as the public-facing app, an XSS bug anywhere in the
-public app could steal an admin's session. Splitting them means a bug in the
-student-facing site can't touch the admin's login.
+`admin/` is a **separate Next.js app and Vercel project** (`admissionmate-admin`),
+reached at `/admin` on the same `admissionmate.online` domain via a Vercel
+multi-zone rewrite (`frontend/vercel.json`) — `admin/next.config.mjs` sets
+`basePath: "/admin"` so its own routing/assets resolve under that prefix
+regardless of which domain serves it (works on `admissionmate-admin.vercel.app/admin/*`
+directly too).
+
+Previously `admin/` lived on a fully separate origin (`admissionmate-admin.vercel.app`)
+specifically so an XSS bug in the public site couldn't reach the admin's
+`localStorage` JWT. Merging both onto one domain (2026-09-11, deliberate choice)
+gives up that isolation in exchange for a single custom domain — noted here so
+a future session doesn't "fix" the shared origin without knowing it was intentional.
 
 ## Backend (`backend/`)
 
@@ -52,13 +54,15 @@ student-facing site can't touch the admin's login.
   - Local dev: `EMAIL_BACKEND=smtp` via Gmail (`backend/.env`, gitignored)
   - Production: `EMAIL_BACKEND=resend` — Render blocks all outbound SMTP ports on every plan, so production sends over Resend's HTTPS API instead (`backend/app/services/email/resend.py`)
   - Sending domain `admissionmate.online` is verified with Resend (DKIM/SPF/MX/CNAME records added in Hostinger DNS) — production sends `from: noreply@admissionmate.online` and can reach **any** recipient, not just the account owner
-- **CORS**: `CORS_ORIGINS` env var on Render currently allow-lists both Vercel origins (`admission-mate-sandy.vercel.app`, `admissionmate-admin.vercel.app`)
+- **CORS**: `CORS_ORIGINS` env var on Render allow-lists `admissionmate.online`, `www.admissionmate.online`, plus both old `*.vercel.app` origins (kept during DNS cutover, safe to drop once the custom domain is confirmed working end-to-end)
 - **Local DB browsing**: `docker-compose.yml` includes Adminer (`localhost:8080`) alongside local Postgres/Redis — a Supabase-Table-Editor-style UI for the local dev database only, not production
 
 ## Frontend (`frontend/`)
 
 - Public exam calendar (no login) + student dashboard/planner (OTP login required)
 - Deployed to Vercel project `admission-mate`, auto-deploys on push to `master` (root directory set to `frontend/`)
+- Custom domains `admissionmate.online` / `www.admissionmate.online` attached (2026-09-11) — pending DNS: see "Known gaps"
+- `frontend/vercel.json` rewrites `/admin` and `/admin/:path*` to the `admin/` deployment (multi-zone)
 - `NEXT_PUBLIC_API_BASE_URL` → `https://admissionmate-api.onrender.com`
 
 ## Admin dashboard (`admin/`)
@@ -66,7 +70,9 @@ student-facing site can't touch the admin's login.
 - Standalone Next.js app: OTP login gated to `role: admin`, manage exams, toggle user status, view audit log
 - Dark/light theme (persisted, defaults to system preference)
 - Deployed to its own Vercel project `admissionmate-admin` (deployed via CLI, not yet connected to auto-deploy-on-push — redeploy manually with `npx vercel --prod` from `admin/` after changes, or run `vercel git connect` to wire it up)
+- `basePath: "/admin"` (`next.config.mjs`) — reached at `admissionmate.online/admin` via the frontend's rewrite, or directly at `admissionmate-admin.vercel.app/admin` (the bare `/login` root path 404s now, this is expected)
 - `NEXT_PUBLIC_API_BASE_URL` → same Render backend URL
+- Public frontend's admin-role login redirect targets the relative `/admin/login` path (no env var needed — works on whichever domain serves the frontend deployment)
 
 ## Secrets / where things live
 
@@ -82,7 +88,11 @@ student-facing site can't touch the admin's login.
 
 ## Known gaps / next things to watch
 
+- **`admissionmate.online` DNS not pointed at Vercel yet** — domain is attached to the `admission-mate` Vercel project, but Hostinger still needs these records added (do NOT change nameservers — that would break the existing Resend email DNS records):
+  - `A  admissionmate.online  →  76.76.21.21`
+  - `A  www.admissionmate.online  →  76.76.21.21`
+  Until this is done, the site is only reachable at `admission-mate-sandy.vercel.app` (which already fully works, including `/admin`).
 - Old Render Postgres (`admissionmate-db`) is no longer used post-Neon-migration but hasn't been deleted yet — safe to remove once confident nothing regressed
 - Admin Vercel project isn't connected to GitHub for auto-deploy yet (manual `vercel --prod` needed after changes to `admin/`)
 - Render's free web service spins down after inactivity — first request after idle has a cold-start delay
-- No custom domain yet for either frontend — both run on `*.vercel.app`
+- Once the custom domain is confirmed working, drop the old `*.vercel.app` origins from `CORS_ORIGINS` (Render env var + `render.yaml`)
