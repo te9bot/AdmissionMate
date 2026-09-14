@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CountdownClock } from "@/components/CountdownClock";
 import { ExamCard } from "@/components/ExamCard";
+import { ExamCardSkeleton } from "@/components/ExamCardSkeleton";
 import { Parallax } from "@/components/Parallax";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
@@ -136,25 +137,32 @@ export default function PublicCalendarPage() {
 
         <section className="mt-8">
           {error && <p className="rounded-2xl bg-red-100 p-4 text-sm text-red-700">{error}</p>}
-          {!error && fetching && <p className="text-sm text-brand-700">Loading exams…</p>}
           {!error && !fetching && exams.length === 0 && (
             <p className="rounded-2xl bg-white p-6 text-sm text-brand-700 shadow-card">
               No exams in this category yet. Check back soon.
             </p>
           )}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {exams.slice(0, visibleCount).map((exam) => (
-              <ExamCard
-                key={exam.id}
-                exam={exam}
-                following={user ? followedIds.has(exam.id) : undefined}
-                onFollowToggle={user ? () => toggleFollow(exam) : undefined}
-              />
-            ))}
-          </div>
+          {!error && fetching ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ExamCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {exams.slice(0, visibleCount).map((exam) => (
+                <ExamCard
+                  key={exam.id}
+                  exam={exam}
+                  following={user ? followedIds.has(exam.id) : undefined}
+                  onFollowToggle={user ? () => toggleFollow(exam) : undefined}
+                />
+              ))}
+            </div>
+          )}
           {hasMore && (
             <div ref={sentinelRef} className="flex justify-center py-6">
-              <p className="text-xs text-brand-500">Loading more…</p>
+              <ExamCardSkeleton />
             </div>
           )}
         </section>

@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { CalendarMini } from "@/components/CalendarMini";
 import { CountdownClock } from "@/components/CountdownClock";
 import { ExamCard } from "@/components/ExamCard";
+import { ExamCardSkeleton } from "@/components/ExamCardSkeleton";
 import { Parallax } from "@/components/Parallax";
 import { StatTile } from "@/components/StatTile";
 import { TimelineBlock } from "@/components/TimelineBlock";
@@ -41,12 +42,16 @@ export default function DashboardPage() {
   const [view, setView] = useState<View>("weekly");
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const [examSearch, setExamSearch] = useState("");
+  const [loadingExams, setLoadingExams] = useState(true);
 
   useEffect(() => {
     if (!accessToken) return;
-    api.get<Exam[]>("/exams/me/followed", accessToken).then(setFollowedExams).catch(() => {});
-    api.get<Exam[]>("/exams").then(setAllExams).catch(() => {});
-    api.get<StudyGoal[]>("/goals", accessToken).then(setGoals).catch(() => {});
+    setLoadingExams(true);
+    Promise.allSettled([
+      api.get<Exam[]>("/exams/me/followed", accessToken).then(setFollowedExams),
+      api.get<Exam[]>("/exams").then(setAllExams),
+      api.get<StudyGoal[]>("/goals", accessToken).then(setGoals),
+    ]).finally(() => setLoadingExams(false));
   }, [accessToken]);
 
   const followedIds = useMemo(() => new Set(followedExams.map((e) => e.id)), [followedExams]);
@@ -151,20 +156,30 @@ export default function DashboardPage() {
 
           <div className="rounded-3xl bg-white p-5 shadow-card">
             <p className="mb-3 text-sm font-semibold text-brand-950">My Exams</p>
-            {followedExams.length === 0 && <p className="text-xs text-brand-700">Not following any exams yet.</p>}
-            <ul className="flex flex-col gap-2">
-              {followedExams.map((exam) => (
-                <li key={exam.id} className="flex items-center justify-between text-sm">
-                  <span className="text-brand-900">{exam.title}</span>
-                  <button
-                    onClick={() => toggleFollow(exam)}
-                    className="text-xs font-medium text-brand-500 hover:text-brand-700"
-                  >
-                    Unfollow
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {loadingExams ? (
+              <ul className="flex flex-col gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <li key={i} className="h-5 animate-pulse rounded bg-brand-100" />
+                ))}
+              </ul>
+            ) : (
+              <>
+                {followedExams.length === 0 && <p className="text-xs text-brand-700">Not following any exams yet.</p>}
+                <ul className="flex flex-col gap-2">
+                  {followedExams.map((exam) => (
+                    <li key={exam.id} className="flex items-center justify-between text-sm">
+                      <span className="text-brand-900">{exam.title}</span>
+                      <button
+                        onClick={() => toggleFollow(exam)}
+                        className="text-xs font-medium text-brand-500 hover:text-brand-700"
+                      >
+                        Unfollow
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </div>
 
@@ -212,7 +227,13 @@ export default function DashboardPage() {
                 className="w-full max-w-xs rounded-full border border-brand-100 px-4 py-2 text-sm text-brand-900 outline-none focus:border-brand-400 sm:w-64"
               />
             </div>
-            {browsableExams.length === 0 ? (
+            {loadingExams ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ExamCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : browsableExams.length === 0 ? (
               <p className="text-xs text-brand-700">No exams match &ldquo;{examSearch}&rdquo;.</p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
