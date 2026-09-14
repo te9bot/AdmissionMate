@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CalendarMini } from "@/components/CalendarMini";
@@ -9,7 +10,7 @@ import { Parallax } from "@/components/Parallax";
 import { StatTile } from "@/components/StatTile";
 import { TimelineBlock } from "@/components/TimelineBlock";
 import { ViewToggle } from "@/components/ViewToggle";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { Exam, StudyGoal, Topic } from "@/lib/types";
 
@@ -31,12 +32,15 @@ function inRange(dateKey: string, view: View) {
 }
 
 export default function DashboardPage() {
-  const { user, accessToken } = useAuth();
+  const router = useRouter();
+  const { user, accessToken, logout } = useAuth();
   const [followedExams, setFollowedExams] = useState<Exam[]>([]);
+  const [examError, setExamError] = useState<string | null>(null);
   const [allExams, setAllExams] = useState<Exam[]>([]);
   const [goals, setGoals] = useState<StudyGoal[]>([]);
   const [view, setView] = useState<View>("weekly");
   const [selectedDate, setSelectedDate] = useState(todayKey());
+  const [examSearch, setExamSearch] = useState("");
 
   useEffect(() => {
     if (!accessToken) return;
@@ -46,6 +50,11 @@ export default function DashboardPage() {
   }, [accessToken]);
 
   const followedIds = useMemo(() => new Set(followedExams.map((e) => e.id)), [followedExams]);
+  const browsableExams = useMemo(() => {
+    const query = examSearch.trim().toLowerCase();
+    const matches = query ? allExams.filter((e) => e.title.toLowerCase().includes(query)) : allExams;
+    return matches.slice(0, 12);
+  }, [allExams, examSearch]);
   const nearestExam = useMemo(
     () => [...followedExams].filter((e) => e.days_left >= 0).sort((a, b) => a.days_left - b.days_left)[0],
     [followedExams]
@@ -65,12 +74,22 @@ export default function DashboardPage() {
 
   async function toggleFollow(exam: Exam) {
     if (!accessToken) return;
-    if (followedIds.has(exam.id)) {
-      await api.delete(`/exams/${exam.id}/follow`, accessToken);
-      setFollowedExams((prev) => prev.filter((e) => e.id !== exam.id));
-    } else {
-      await api.post(`/exams/${exam.id}/follow`, undefined, accessToken);
-      setFollowedExams((prev) => [...prev, exam]);
+    setExamError(null);
+    try {
+      if (followedIds.has(exam.id)) {
+        await api.delete(`/exams/${exam.id}/follow`, accessToken);
+        setFollowedExams((prev) => prev.filter((e) => e.id !== exam.id));
+      } else {
+        await api.post(`/exams/${exam.id}/follow`, undefined, accessToken);
+        setFollowedExams((prev) => [...prev, exam]);
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        logout();
+        router.push("/login");
+        return;
+      }
+      setExamError(err instanceof ApiError ? err.message : "Could not update this exam. Try again.");
     }
   }
 
@@ -180,12 +199,28 @@ export default function DashboardPage() {
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-card">
-            <p className="mb-4 text-sm font-semibold text-brand-950">Browse exams</p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {allExams.slice(0, 4).map((exam) => (
-                <ExamCard key={exam.id} exam={exam} following={followedIds.has(exam.id)} onFollowToggle={() => toggleFollow(exam)} />
-              ))}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-brand-950">Browse exams to track</p>
+                {examError && <p className="mt-1 text-xs text-red-600">{examError}</p>}
+              </div>
+              <input
+                type="text"
+                value={examSearch}
+                onChange={(e) => setExamSearch(e.target.value)}
+                placeholder="Search e.g. BUET, Rajshahi, SUST…"
+                className="w-full max-w-xs rounded-full border border-brand-100 px-4 py-2 text-sm text-brand-900 outline-none focus:border-brand-400 sm:w-64"
+              />
             </div>
+            {browsableExams.length === 0 ? (
+              <p className="text-xs text-brand-700">No exams match &ldquo;{examSearch}&rdquo;.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {browsableExams.map((exam) => (
+                  <ExamCard key={exam.id} exam={exam} following={followedIds.has(exam.id)} onFollowToggle={() => toggleFollow(exam)} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -157,17 +157,16 @@ export default function LoginPage() {
 
   if (mode === "set-password" || mode === "signup") {
     const isSignup = mode === "signup";
+    const step = isSignup ? 1 : 2;
     return (
       <main className="flex min-h-screen items-center justify-center bg-brand-50 p-4">
         <div className="w-full max-w-sm rounded-4xl bg-white p-8 shadow-panel">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-400">AdmissionMate</p>
           <div className="mt-4 flex gap-1.5">
-            {[0, 1, isSignup ? 2 : null].filter((v) => v !== null).map((_, i) => (
+            {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className={`h-1 flex-1 rounded-full ${
-                  i < (isSignup ? 1 : 2) ? "bg-brand-700" : "bg-brand-100"
-                }`}
+                className={`h-1 flex-1 rounded-full ${i < step ? "bg-brand-700" : "bg-brand-100"}`}
               />
             ))}
           </div>

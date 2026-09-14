@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CountdownClock } from "@/components/CountdownClock";
 import { ExamCard } from "@/components/ExamCard";
@@ -13,8 +14,10 @@ import { EXAM_CATEGORIES, type Exam, type ExamCategory } from "@/lib/types";
 type Filter = ExamCategory | "all";
 
 export default function PublicCalendarPage() {
-  const { user, loading } = useAuth();
+  const router = useRouter();
+  const { user, accessToken, loading, logout } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<Filter>("all");
   const [error, setError] = useState<string | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -31,6 +34,41 @@ export default function PublicCalendarPage() {
       cancelled = true;
     };
   }, [filter]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setFollowedIds(new Set());
+      return;
+    }
+    api
+      .get<Exam[]>("/exams/me/followed", accessToken)
+      .then((data) => setFollowedIds(new Set(data.map((e) => e.id))))
+      .catch(() => {});
+  }, [accessToken]);
+
+  async function toggleFollow(exam: Exam) {
+    if (!accessToken) return;
+    try {
+      if (followedIds.has(exam.id)) {
+        await api.delete(`/exams/${exam.id}/follow`, accessToken);
+        setFollowedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(exam.id);
+          return next;
+        });
+      } else {
+        await api.post(`/exams/${exam.id}/follow`, undefined, accessToken);
+        setFollowedIds((prev) => new Set(prev).add(exam.id));
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        logout();
+        router.push("/login");
+        return;
+      }
+      setError(err instanceof ApiError ? err.message : "Could not update this exam. Try again.");
+    }
+  }
 
   const nearest = useMemo(() => {
     const upcoming = exams.filter((e) => e.days_left >= 0).sort((a, b) => a.days_left - b.days_left);
@@ -106,7 +144,12 @@ export default function PublicCalendarPage() {
           )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {exams.slice(0, visibleCount).map((exam) => (
-              <ExamCard key={exam.id} exam={exam} />
+              <ExamCard
+                key={exam.id}
+                exam={exam}
+                following={user ? followedIds.has(exam.id) : undefined}
+                onFollowToggle={user ? () => toggleFollow(exam) : undefined}
+              />
             ))}
           </div>
           {hasMore && (
