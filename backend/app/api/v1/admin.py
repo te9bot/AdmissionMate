@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -74,19 +74,24 @@ async def delete_exam(
 
 @router.get("/users", response_model=list[UserRead])
 @limiter.limit("60/minute")
-async def list_users(request: Request, db: AsyncSession = Depends(get_db)):
+async def list_users(
+    request: Request,
+    limit: int = Query(500, ge=1, le=2000),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
     cached = await get_cached(ADMIN_USERS_CACHE_KEY)
     if cached is not None:
-        return [UserRead.model_validate(item) for item in json.loads(cached)]
-
-    result = await db.execute(select(User).order_by(User.created_at.desc()))
-    users = [UserRead.model_validate(u) for u in result.scalars().all()]
-    await redis_client.set(
-        ADMIN_USERS_CACHE_KEY,
-        json.dumps([u.model_dump(mode="json") for u in users]),
-        ex=ADMIN_LIST_CACHE_TTL_SECONDS,
-    )
-    return users
+        users = [UserRead.model_validate(item) for item in json.loads(cached)]
+    else:
+        result = await db.execute(select(User).order_by(User.created_at.desc()))
+        users = [UserRead.model_validate(u) for u in result.scalars().all()]
+        await redis_client.set(
+            ADMIN_USERS_CACHE_KEY,
+            json.dumps([u.model_dump(mode="json") for u in users]),
+            ex=ADMIN_LIST_CACHE_TTL_SECONDS,
+        )
+    return users[offset : offset + limit]
 
 
 @router.patch("/users/{user_id}", response_model=UserRead)

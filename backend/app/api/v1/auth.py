@@ -19,6 +19,7 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserRead
 from app.services import auth_service
+from app.services.email import EmailSpendingCapExceeded
 
 router = APIRouter()
 
@@ -33,7 +34,12 @@ async def request_otp(request: Request, payload: OTPRequest):
     await enforce_email_rate_limit(
         payload.email, scope="otp-request", max_requests=_OTP_LIMIT_COUNT, window_seconds=_OTP_LIMIT_WINDOW
     )
-    dev_code = await auth_service.request_otp(payload.email, payload.name)
+    try:
+        dev_code = await auth_service.request_otp(payload.email, payload.name)
+    except EmailSpendingCapExceeded:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Email service is temporarily at capacity, try again later")
+    except Exception:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Failed to send login code, try again later")
     return OTPRequestResponse(message="OTP sent", dev_code=dev_code)
 
 

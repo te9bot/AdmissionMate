@@ -37,6 +37,8 @@ export default function DashboardPage() {
   const { user, accessToken, logout } = useAuth();
   const [followedExams, setFollowedExams] = useState<Exam[]>([]);
   const [examError, setExamError] = useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [allExams, setAllExams] = useState<Exam[]>([]);
   const [goals, setGoals] = useState<StudyGoal[]>([]);
   const [view, setView] = useState<View>("weekly");
@@ -47,11 +49,18 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!accessToken) return;
     setLoadingExams(true);
+    setLoadError(null);
     Promise.allSettled([
       api.get<Exam[]>("/exams/me/followed", accessToken).then(setFollowedExams),
       api.get<Exam[]>("/exams").then(setAllExams),
       api.get<StudyGoal[]>("/goals", accessToken).then(setGoals),
-    ]).finally(() => setLoadingExams(false));
+    ])
+      .then((results) => {
+        if (results.some((r) => r.status === "rejected")) {
+          setLoadError("Some of your data couldn't be loaded. Try refreshing the page.");
+        }
+      })
+      .finally(() => setLoadingExams(false));
   }, [accessToken]);
 
   const followedIds = useMemo(() => new Set(followedExams.map((e) => e.id)), [followedExams]);
@@ -100,13 +109,23 @@ export default function DashboardPage() {
 
   async function toggleTopicDone(goalId: string, topic: Topic) {
     if (!accessToken) return;
+    setPlanError(null);
     const nextStatus = topic.status === "done" ? "pending" : "done";
-    await api.patch(`/topics/${topic.id}`, { status: nextStatus }, accessToken);
-    setGoals((prev) =>
-      prev.map((g) =>
-        g.id !== goalId ? g : { ...g, topics: g.topics.map((t) => (t.id === topic.id ? { ...t, status: nextStatus } : t)) }
-      )
-    );
+    try {
+      await api.patch(`/topics/${topic.id}`, { status: nextStatus }, accessToken);
+      setGoals((prev) =>
+        prev.map((g) =>
+          g.id !== goalId ? g : { ...g, topics: g.topics.map((t) => (t.id === topic.id ? { ...t, status: nextStatus } : t)) }
+        )
+      );
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        logout();
+        router.push("/login");
+        return;
+      }
+      setPlanError(err instanceof ApiError ? err.message : "Could not update this topic. Try again.");
+    }
   }
 
   return (
@@ -145,6 +164,10 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {loadError && (
+        <p className="mt-6 rounded-xl bg-red-100 px-4 py-2.5 text-sm text-red-700">{loadError}</p>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
         <div className="flex flex-col gap-6">
@@ -188,6 +211,7 @@ export default function DashboardPage() {
             <p className="mb-4 text-sm font-semibold text-brand-950">
               {view === "daily" ? "Today's" : view === "weekly" ? "This week's" : "This month's"} study plan
             </p>
+            {planError && <p className="mb-3 text-xs text-red-600">{planError}</p>}
             {topicsInView.length === 0 ? (
               <p className="text-xs text-brand-700">
                 Nothing scheduled. Add topics to a goal in{" "}

@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_USE_TLS: bool = True
     RESEND_API_KEY: str = ""
+    EMAIL_DAILY_CAP: int = 500
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 

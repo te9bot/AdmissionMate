@@ -20,4 +20,5 @@ class SMTPEmailBackend(EmailBackend):
             username=settings.SMTP_USER or None,
             password=settings.SMTP_PASSWORD or None,
             start_tls=settings.SMTP_USE_TLS,
+            timeout=10.0,
         )

@@ -18,6 +18,7 @@ frontend/*.tsbuildinfo
 admin/node_modules/
 admin/.next/
 admin/next-env.d.ts
+admin/*.tsbuildinfo
 
 # OS
 .DS_Store

@@ -12,7 +12,7 @@ from app.models.exam import Exam
 from app.models.followed_exam import FollowedExam
 from app.models.notification_log import NotificationChannel, NotificationLog
 from app.models.user import User
-from app.services.email import email_backend
+from app.services.email import EmailSpendingCapExceeded, send_email
 
 logger = logging.getLogger("admissionmate.notifications")
 
@@ -42,7 +42,14 @@ async def send_exam_reminders(exam_id: uuid.UUID | None = None) -> int:
             days_left = (exam.exam_date - date.today()).days
             subject = f"{exam.title} — {days_left} days left"
             body = f"Hi{f' {user.name}' if user.name else ''}, your followed exam '{exam.title}' is in {days_left} days ({exam.exam_date})."
-            await email_backend.send(user.email, subject, body)
+            try:
+                await send_email(user.email, subject, body)
+            except EmailSpendingCapExceeded:
+                logger.warning("Daily email cap reached after %d reminders; stopping this run", sent)
+                break
+            except Exception:
+                logger.exception("Failed to send exam reminder to %s, skipping", user.email)
+                continue
             db.add(NotificationLog(user_id=user.id, exam_id=exam.id, channel=NotificationChannel.email))
             sent += 1
 

@@ -13,8 +13,20 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://admissionmate-api.onrender.com/health || echo "curl_failed")
+          check() {
+            curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://admissionmate-api.onrender.com/health || echo "curl_failed"
+          }
+
+          status=$(check)
           echo "Health check returned HTTP $status"
           if [ "$status" != "200" ]; then
-            echo "::warning::Health check did not return 200 (got $status) - the service may have been cold-starting"
+            echo "First check failed (got $status) - retrying once in case this is a cold start"
+            sleep 20
+            status=$(check)
+            echo "Retry returned HTTP $status"
+          fi
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Health check failed twice (got $status) - service down or degraded (DB/Redis unreachable)"
+            exit 1
           fi

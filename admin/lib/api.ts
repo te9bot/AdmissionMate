@@ -1,4 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const REQUEST_TIMEOUT_MS = 15000;
 
 export class ApiError extends Error {
   status: number;
@@ -15,7 +16,20 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new ApiError(0, "The request timed out. Check your connection and try again.");
+    }
+    throw new ApiError(0, "Couldn't reach the server. Check your connection and try again.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     let message = res.statusText;

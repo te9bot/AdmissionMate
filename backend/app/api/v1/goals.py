@@ -52,7 +52,8 @@ async def create_goal(
 
 
 @router.get("/goals", response_model=list[GoalRead])
-async def list_goals(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+@limiter.limit("60/minute")
+async def list_goals(request: Request, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     result = await db.execute(
         select(StudyGoal).options(selectinload(StudyGoal.topics)).where(StudyGoal.user_id == user.id)
     )
@@ -60,7 +61,9 @@ async def list_goals(db: AsyncSession = Depends(get_db), user: User = Depends(ge
 
 
 @router.put("/goals/{goal_id}", response_model=GoalRead)
+@limiter.limit("30/minute")
 async def update_goal(
+    request: Request,
     goal_id: uuid.UUID,
     payload: GoalUpdate,
     db: AsyncSession = Depends(get_db),
@@ -99,7 +102,9 @@ async def add_topics(
 
 
 @router.post("/goals/{goal_id}/regenerate", response_model=GoalRead)
+@limiter.limit("30/minute")
 async def regenerate_schedule(
+    request: Request,
     goal_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -112,7 +117,9 @@ async def regenerate_schedule(
 
 
 @router.patch("/topics/{topic_id}", response_model=TopicRead)
+@limiter.limit("30/minute")
 async def update_topic(
+    request: Request,
     topic_id: uuid.UUID,
     payload: TopicUpdate,
     db: AsyncSession = Depends(get_db),

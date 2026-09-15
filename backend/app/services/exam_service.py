@@ -28,7 +28,10 @@ def to_read(exam: Exam) -> ExamRead:
     )
 
 
-async def list_exams(db: AsyncSession, category: str | None = None) -> list[ExamRead]:
+async def fetch_all_exams(db: AsyncSession, category: str | None = None) -> list[ExamRead]:
+    """Cached, unsliced exam fetch. Callers that need the full set (e.g. to filter
+    by a caller-specific id set) should use this instead of list_exams, which caps
+    its result for pagination."""
     cache_key = EXAM_LIST_CACHE_KEY if category is None else f"{EXAM_LIST_CACHE_KEY}:{category}"
     cached = await get_cached(cache_key)
     if cached is not None:
@@ -44,6 +47,11 @@ async def list_exams(db: AsyncSession, category: str | None = None) -> list[Exam
         cache_key, json.dumps([e.model_dump(mode="json") for e in exams]), ex=settings.EXAM_CACHE_TTL_SECONDS
     )
     return exams
+
+
+async def list_exams(db: AsyncSession, category: str | None = None, limit: int = 500, offset: int = 0) -> list[ExamRead]:
+    exams = await fetch_all_exams(db, category)
+    return exams[offset : offset + limit]
 
 
 async def get_exam(db: AsyncSession, exam_id: uuid.UUID) -> ExamRead | None:

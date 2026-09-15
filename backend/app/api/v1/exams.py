@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -18,8 +19,14 @@ router = APIRouter()
 
 @router.get("", response_model=list[ExamRead])
 @limiter.limit("60/minute")
-async def get_exams(request: Request, category: ExamCategory | None = None, db: AsyncSession = Depends(get_db)):
-    return await exam_service.list_exams(db, category=category.value if category else None)
+async def get_exams(
+    request: Request,
+    category: ExamCategory | None = None,
+    limit: int = Query(500, ge=1, le=2000),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    return await exam_service.list_exams(db, category=category.value if category else None, limit=limit, offset=offset)
 
 
 @router.get("/{exam_id}", response_model=ExamRead)
@@ -52,7 +59,16 @@ async def follow_exam(
 
     follow = FollowedExam(user_id=user.id, exam_id=exam_id, notify=True)
     db.add(follow)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # A concurrent request for the same user+exam won the race between our
+        # existence check and this insert; the unique constraint caught it.
+        await db.rollback()
+        result = await db.execute(
+            select(FollowedExam).where(FollowedExam.user_id == user.id, FollowedExam.exam_id == exam_id)
+        )
+        return result.scalar_one()
     await db.refresh(follow)
     return follow
 
@@ -75,15 +91,15 @@ async def unfollow_exam(
 
 
 @router.get("/me/followed", response_model=list[ExamRead])
+@limiter.limit("60/minute")
 async def get_my_followed_exams(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     result = await db.execute(select(FollowedExam.exam_id).where(FollowedExam.user_id == user.id))
-    exam_ids = result.scalars().all()
-    exams = []
-    for exam_id in exam_ids:
-        exam = await exam_service.get_exam(db, exam_id)
-        if exam is not None:
-            exams.append(exam)
-    return exams
+    exam_ids = set(result.scalars().all())
+    if not exam_ids:
+        return []
+    all_exams = await exam_service.fetch_all_exams(db)
+    return [exam for exam in all_exams if exam.id in exam_ids]

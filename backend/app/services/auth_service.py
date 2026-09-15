@@ -15,7 +15,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
-from app.services.email import email_backend
+from app.services.email import send_email
 
 PASSWORD_NOT_SET = "password_not_set"
 INVALID_CREDENTIALS = "invalid_credentials"
@@ -37,7 +37,7 @@ async def request_otp(email: str, name: str | None) -> str | None:
 
     subject = f"Your {settings.APP_NAME} login code"
     body = f"Your one-time login code is {code}. It expires in {settings.OTP_TTL_SECONDS // 60} minutes."
-    await email_backend.send(email, subject, body)
+    await send_email(email, subject, body)
 
     return code if settings.DEBUG else None
 

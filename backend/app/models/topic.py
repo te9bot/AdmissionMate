@@ -22,7 +22,7 @@ class Topic(Base):
     __tablename__ = "topics"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    goal_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("study_goals.id"), nullable=False)
+    goal_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("study_goals.id"), index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     status: Mapped[TopicStatus] = mapped_column(Enum(TopicStatus, name="topic_status"), default=TopicStatus.pending, nullable=False)

@@ -16,6 +16,8 @@ export default function AdminDashboardPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<ExamCategory>("hsc");
@@ -24,14 +26,21 @@ export default function AdminDashboardPage() {
   const [creating, setCreating] = useState(false);
 
   function refresh() {
-    if (!accessToken) return;
-    api.get<Exam[]>("/exams").then(setExams).catch(() => {});
-    api.get<User[]>("/admin/users", accessToken).then(setUsers).catch(() => {});
-    api.get<AuditLogEntry[]>("/admin/audit-logs", accessToken).then(setAuditLogs).catch(() => {});
+    if (!accessToken) return Promise.resolve();
+    const fail = (err: unknown) => {
+      setError(err instanceof ApiError ? err.message : "Could not load admin data. Try refreshing.");
+    };
+    return Promise.allSettled([
+      api.get<Exam[]>("/exams").then(setExams).catch(fail),
+      api.get<User[]>("/admin/users", accessToken).then(setUsers).catch(fail),
+      api.get<AuditLogEntry[]>("/admin/audit-logs", accessToken).then(setAuditLogs).catch(fail),
+    ]);
   }
 
   useEffect(() => {
-    refresh();
+    setLoading(true);
+    setError(null);
+    refresh().finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
@@ -63,19 +72,36 @@ export default function AdminDashboardPage() {
 
   async function handleDeleteExam(examId: string) {
     if (!accessToken) return;
-    await api.delete(`/admin/exams/${examId}`, accessToken);
-    refresh();
+    setError(null);
+    try {
+      await api.delete(`/admin/exams/${examId}`, accessToken);
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not delete this exam. Try again.");
+    }
   }
 
   async function handleResend(examId: string) {
     if (!accessToken) return;
-    await api.post(`/admin/exams/${examId}/resend-notifications`, undefined, accessToken);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await api.post<{ sent: number }>(`/admin/exams/${examId}/resend-notifications`, undefined, accessToken);
+      setNotice(`Sent to ${result.sent} follower${result.sent === 1 ? "" : "s"}.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not resend notifications. Try again.");
+    }
   }
 
   async function handleToggleUser(user: User) {
     if (!accessToken) return;
-    await api.patch(`/admin/users/${user.id}`, { is_active: !user.is_active }, accessToken);
-    refresh();
+    setError(null);
+    try {
+      await api.patch(`/admin/users/${user.id}`, { is_active: !user.is_active }, accessToken);
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update this user. Try again.");
+    }
   }
 
   return (
@@ -89,6 +115,15 @@ export default function AdminDashboardPage() {
         </div>
       </section>
 
+      {error && (
+        <p className="rounded-xl bg-red-100 px-4 py-2.5 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">{error}</p>
+      )}
+      {notice && (
+        <p className="rounded-xl bg-accent-400/20 px-4 py-2.5 text-sm text-brand-900 dark:bg-accent-400/10 dark:text-accent-400">
+          {notice}
+        </p>
+      )}
+
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Total exams" value={exams.length} icon={<CalendarIcon className="h-5 w-5" />} />
         <StatTile label="Active users" value={`${activeUsers} / ${users.length}`} icon={<UsersIcon className="h-5 w-5" />} accent="accent" />
@@ -97,7 +132,6 @@ export default function AdminDashboardPage() {
 
       <section id="exams" className="scroll-mt-6 rounded-3xl bg-white p-6 shadow-card dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-white/10">
         <p className="mb-4 text-sm font-semibold text-brand-950 dark:text-slate-50">Create exam</p>
-        {error && <p className="mb-3 rounded-xl bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">{error}</p>}
         <form onSubmit={handleCreateExam} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <input
             required
@@ -174,12 +208,20 @@ export default function AdminDashboardPage() {
                   </td>
                 </tr>
               ))}
-              {exams.length === 0 && (
+              {loading ? (
                 <tr>
                   <td colSpan={5} className="py-4 text-center text-xs text-brand-500 dark:text-slate-500">
-                    No exams yet.
+                    Loading…
                   </td>
                 </tr>
+              ) : (
+                exams.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-4 text-center text-xs text-brand-500 dark:text-slate-500">
+                      No exams yet.
+                    </td>
+                  </tr>
+                )
               )}
             </tbody>
           </table>
@@ -226,6 +268,21 @@ export default function AdminDashboardPage() {
                   </td>
                 </tr>
               ))}
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-4 text-center text-xs text-brand-500 dark:text-slate-500">
+                    Loading…
+                  </td>
+                </tr>
+              ) : (
+                users.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-xs text-brand-500 dark:text-slate-500">
+                      No users yet.
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
           {usersReveal.hasMore && (
@@ -247,7 +304,11 @@ export default function AdminDashboardPage() {
               <span className="text-brand-400 dark:text-slate-600">{new Date(log.created_at).toLocaleString()}</span>
             </li>
           ))}
-          {auditLogs.length === 0 && <p className="text-xs text-brand-500 dark:text-slate-500">No activity yet.</p>}
+          {loading ? (
+            <p className="text-xs text-brand-500 dark:text-slate-500">Loading…</p>
+          ) : (
+            auditLogs.length === 0 && <p className="text-xs text-brand-500 dark:text-slate-500">No activity yet.</p>
+          )}
         </ul>
       </section>
     </AppShell>
